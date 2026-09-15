@@ -1,6 +1,12 @@
 from pathlib import Path
 
-from pipy.bootstrap import create_enrollment_bundle, decode_bundle, ensure_identity, genesis, make_script
+from pipy.bootstrap import (
+    create_enrollment_bundle,
+    decode_bundle,
+    ensure_identity,
+    genesis,
+    make_script,
+)
 from pipy.config import Paths
 from pipy.store import StateStore
 
@@ -15,9 +21,13 @@ def test_genesis_and_make_me_a_pipy(tmp_path: Path) -> None:
     assert decoded["cluster_id"] == cfg.cluster_id
     assert decoded["cluster_public"] == cfg.cluster_public
     assert decoded["token_id"] == token_id
+
     script = make_script(bundle)
     assert "pip install" in script
-    assert "pipy enroll --bundle" in script
+    assert "pipy enroll --bundle-file" in script
+    assert "mktemp" in script
+    assert "umask 077" in script
     assert "exec pipy begin" in script
     assert cfg.cluster_private not in script
+    assert f"--bundle {bundle}" not in script
     store.close()
