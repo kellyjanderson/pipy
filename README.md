@@ -4,6 +4,8 @@ PiPy is a self-organizing distributed-computing fabric for Raspberry Pi computer
 
 The reference workload computes arbitrary-precision π with distributed Chudnovsky binary splitting. The cluster machinery itself is workload-agnostic: jobs are split into deterministic work units, leased to available nodes, verified, reduced, replicated, and recovered when nodes disappear.
 
+PiPy is also self-contained for persistent output. By default, durable artifacts are stored redundantly across member SD cards through a pluggable persistence layer. A USB disk, mounted NAS, or S3-compatible object store can be added later without changing workload code.
+
 > **Project status:** early alpha / hardware-validation stage. The software architecture and local multi-node tests are implemented; real Raspberry Pi and BlueZ/BLE validation is the next milestone.
 
 ## What PiPy does
@@ -19,10 +21,12 @@ The reference workload computes arbitrary-precision π with distributed Chudnovs
 - heterogeneous-node participation with measured capacity tracking;
 - a generic distributed workload interface;
 - Chudnovsky/binary-splitting π as the first workload;
+- self-contained persistent artifacts through replicated member storage by default;
+- pluggable persistence writers for attached disks, mounted NAS storage, and object stores;
 - observer-only UDP telemetry for dashboards and external tools;
-- no dashboard, database server, message broker, or orchestrator required for cluster correctness.
+- no dashboard, database server, message broker, NAS, or cloud service required for cluster correctness.
 
-For the complete architectural contract, see [`ARCHITECTURE.md`](ARCHITECTURE.md). For planned work and maturity milestones, see [`ROADMAP.md`](ROADMAP.md).
+For the complete architectural contract, see [`ARCHITECTURE.md`](ARCHITECTURE.md). Persistent artifact storage is specified in [`PERSISTENCE.md`](PERSISTENCE.md). For planned work and maturity milestones, see [`ROADMAP.md`](ROADMAP.md).
 
 ## Requirements
 
@@ -125,6 +129,21 @@ Inspect local replicated state with:
 pipy status
 ```
 
+## Persistent artifacts
+
+Workloads publish logical artifacts through PiPy's persistence layer rather than writing to a specific storage device.
+
+The default writer is distributed member storage. A `durable` artifact is replicated across up to three distinct cluster members, using their PiPy-managed local storage. On a one-node or two-node cluster PiPy stores as many independent copies as the cluster can physically provide and reports when the requested durability cannot yet be met.
+
+The same artifact API can later route data to:
+
+- an SSD or hard disk attached to a member;
+- an NFS/SMB-mounted NAS;
+- S3 or another S3-compatible object store;
+- multiple writers simultaneously.
+
+The compute workload requests durability, not a destination. See [`PERSISTENCE.md`](PERSISTENCE.md) for the complete storage model.
+
 ## Run as a service
 
 After initialization, install the systemd service with:
@@ -153,6 +172,7 @@ Cluster correctness does not depend on telemetry delivery. External tools may li
 
 ```text
 ARCHITECTURE.md      detailed system architecture
+PERSISTENCE.md       artifact persistence and storage-writer architecture
 ROADMAP.md           planned maturity milestones
 src/pipy/            production package
   admission.py       authenticated cluster enrollment
@@ -175,7 +195,7 @@ Security-sensitive design details and reporting instructions are in [`SECURITY.m
 
 ## Contributing
 
-Contributions are welcome, particularly around Raspberry Pi hardware validation, BlueZ/BLE behavior, failure testing, consensus, distributed scheduling, and additional deterministic workloads.
+Contributions are welcome, particularly around Raspberry Pi hardware validation, BlueZ/BLE behavior, failure testing, consensus, distributed scheduling, persistence/storage backends, and additional deterministic workloads.
 
 Read [`CONTRIBUTING.md`](CONTRIBUTING.md), [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md), and [`SUPPORT.md`](SUPPORT.md) before opening substantial work.
 
