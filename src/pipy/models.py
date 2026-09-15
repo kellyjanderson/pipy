@@ -36,6 +36,12 @@ class Member:
     status: str = NodeStatus.ALIVE
     capacity: float = 1.0
 
+    @property
+    def display_name(self) -> str:
+        from .names import node_name
+
+        return node_name(self.public_key)
+
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
