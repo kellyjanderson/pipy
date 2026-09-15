@@ -15,6 +15,7 @@ from .config import LocalConfig, default_paths
 from .constants import DEFAULT_CONTROL_PORT
 from .crypto import sign
 from .models import Job
+from .names import cluster_node_names, node_name, short_node_id
 from .node import PiPyNode
 from .protocol import message, request
 from .service import install_systemd_service
@@ -46,6 +47,7 @@ def begin(
     wifi_password: Optional[str] = typer.Option(None, help="Wi-Fi password to provision to admitted nodes"),
 ) -> None:
     """Start a PiPy node. A never-enrolled node becomes a lone-wolf cluster."""
+
     async def main() -> None:
         node = PiPyNode(default_paths(), port=port)
         await node.initialize(wifi_ssid=wifi_ssid, wifi_password=wifi_password)
@@ -57,13 +59,16 @@ def begin(
                 pass
         cfg = node.cfg
         state = "cluster member" if cfg.enrolled else "awaiting enrollment"
-        console.print(f"PiPy node {cfg.node_id} · {state} · control :{cfg.port}")
+        console.print(
+            f"PiPy node {node_name(cfg.node_public)} · {short_node_id(cfg.node_id)} · {state} · control :{cfg.port}"
+        )
         if cfg.enrolled:
             console.print(f"cluster {cfg.cluster_id}")
         try:
             await node.run()
         finally:
             await node.close()
+
     asyncio.run(main())
 
 
@@ -83,6 +88,7 @@ def enroll(
         cfg = LocalConfig.load(paths.config)
     else:
         from .bootstrap import ensure_identity
+
         cfg = ensure_identity(paths, DEFAULT_CONTROL_PORT)
     data = decode_bundle(enrollment_bundle)
     if cfg.enrolled and cfg.cluster_id != data.get("cluster_id"):
@@ -125,14 +131,24 @@ def status() -> None:
     store = StateStore(paths.state_db)
     try:
         leader = store.get("leader_id")
+        members = store.members()
+        display_names = cluster_node_names(members)
         table = Table(title=f"PiPy cluster {cfg.cluster_id or 'unenrolled'}")
+        table.add_column("name")
         table.add_column("node")
         table.add_column("host")
         table.add_column("state")
         table.add_column("role")
         table.add_column("capacity")
-        for member in store.members():
-            table.add_row(member.node_id, f"{member.host}:{member.port}", str(member.status), "leader" if member.node_id == leader else "member", f"{member.capacity:.3f}")
+        for member in members:
+            table.add_row(
+                display_names[member.node_id],
+                short_node_id(member.node_id),
+                f"{member.host}:{member.port}",
+                str(member.status),
+                "leader" if member.node_id == leader else "member",
+                f"{member.capacity:.3f}",
+            )
         console.print(table)
         for job in store.jobs():
             work = store.work(job.job_id)
@@ -151,6 +167,7 @@ def run(
     wait: bool = typer.Option(True, help="Wait for the job to complete"),
 ) -> None:
     """Submit a distributed job through the running PiPy cluster."""
+
     async def main() -> None:
         paths = default_paths()
         if not paths.config.exists():
@@ -193,6 +210,7 @@ def run(
                 await asyncio.sleep(0.5)
         finally:
             store.close()
+
     asyncio.run(main())
 
 
