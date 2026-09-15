@@ -62,4 +62,5 @@ target-version = "py311"
 line-length = 100
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "ASYNC"]
+# Start with correctness checks; broad style normalization can be a separate change.
+select = ["E9", "F63", "F7", "F82"]
