@@ -22,11 +22,12 @@ PiPy is also self-contained for persistent output. By default, durable artifacts
 - a generic distributed workload interface;
 - Chudnovsky/binary-splitting π as the first workload;
 - self-contained persistent artifacts through replicated member storage by default;
+- deterministic weighted-rendezvous placement with no discretionary leader tie-breaking;
 - pluggable persistence writers for attached disks, mounted NAS storage, and object stores;
 - observer-only UDP telemetry for dashboards and external tools;
 - no dashboard, database server, message broker, NAS, or cloud service required for cluster correctness.
 
-For the complete architectural contract, see [`ARCHITECTURE.md`](ARCHITECTURE.md). Persistent artifact storage is specified in [`PERSISTENCE.md`](PERSISTENCE.md). For planned work and maturity milestones, see [`ROADMAP.md`](ROADMAP.md).
+For the complete architectural contract, see [`ARCHITECTURE.md`](ARCHITECTURE.md). Persistent artifact storage is specified in [`PERSISTENCE.md`](PERSISTENCE.md), and replica authority/ranking is specified in [`STORAGE_PLACEMENT.md`](STORAGE_PLACEMENT.md). For planned work and maturity milestones, see [`ROADMAP.md`](ROADMAP.md).
 
 ## Requirements
 
@@ -135,6 +136,8 @@ Workloads publish logical artifacts through PiPy's persistence layer rather than
 
 The default writer is distributed member storage. A `durable` artifact is replicated across up to three distinct cluster members, using their PiPy-managed local storage. On a one-node or two-node cluster PiPy stores as many independent copies as the cluster can physically provide and reports when the requested durability cannot yet be met.
 
+Replica targets are not chosen by a vote and are not discretionary leader decisions. Every member can derive the same ordered targets using the protocol-defined weighted rendezvous placement function and deterministic tie-breakers. The elected leader serializes and commits the placement transition; it does not choose among equal candidates.
+
 The same artifact API can later route data to:
 
 - an SSD or hard disk attached to a member;
@@ -142,7 +145,7 @@ The same artifact API can later route data to:
 - S3 or another S3-compatible object store;
 - multiple writers simultaneously.
 
-The compute workload requests durability, not a destination. See [`PERSISTENCE.md`](PERSISTENCE.md) for the complete storage model.
+The compute workload requests durability, not a destination. See [`PERSISTENCE.md`](PERSISTENCE.md) for the storage model and [`STORAGE_PLACEMENT.md`](STORAGE_PLACEMENT.md) for placement authority, ranking, repair, and tie-breaking rules.
 
 ## Run as a service
 
@@ -171,20 +174,22 @@ Cluster correctness does not depend on telemetry delivery. External tools may li
 ## Repository layout
 
 ```text
-ARCHITECTURE.md      detailed system architecture
-PERSISTENCE.md       artifact persistence and storage-writer architecture
-ROADMAP.md           planned maturity milestones
-src/pipy/            production package
-  admission.py       authenticated cluster enrollment
-  bootstrap.py       genesis and enrollment-script generation
-  discovery.py       BLE and UDP discovery
-  jobs/              workload abstraction and π workload
-  node.py            node lifecycle, election, scheduling, replication
-  rpc.py             authenticated control protocol handlers
-  store.py           durable replicated-state storage
-  telemetry.py       observer-only UDP status
-  cli.py             command-line interface
-tests/               deterministic unit/integration tests
+ARCHITECTURE.md       detailed system architecture
+PERSISTENCE.md        artifact persistence and storage-writer architecture
+STORAGE_PLACEMENT.md  deterministic replica placement protocol
+ROADMAP.md            planned maturity milestones
+src/pipy/             production package
+  admission.py        authenticated cluster enrollment
+  bootstrap.py        genesis and enrollment-script generation
+  discovery.py        BLE and UDP discovery
+  jobs/               workload abstraction and π workload
+  node.py             node lifecycle, election, scheduling, replication
+  rpc.py              authenticated control protocol handlers
+  storage.py          deterministic storage placement primitive
+  store.py            durable replicated-state storage
+  telemetry.py        observer-only UDP status
+  cli.py              command-line interface
+tests/                deterministic unit/integration tests
 ```
 
 ## Security model
