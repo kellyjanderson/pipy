@@ -1,0 +1,59 @@
+name: Bug report
+description: Report reproducible incorrect PiPy behavior
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include private keys, enrollment capabilities, Wi-Fi credentials, or undisclosed vulnerability details. Security reports belong in the private process described in SECURITY.md.
+  - type: input
+    id: version
+    attributes:
+      label: PiPy version or commit
+      placeholder: 0.1.0 / commit SHA
+    validations:
+      required: true
+  - type: input
+    id: hardware
+    attributes:
+      label: Hardware
+      placeholder: Raspberry Pi 5 8GB, Pi 4, Linux development host, etc.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: OS / Python / BlueZ
+      placeholder: Raspberry Pi OS Bookworm, Python 3.11.9, BlueZ 5.x
+    validations:
+      required: true
+  - type: textarea
+    id: topology
+    attributes:
+      label: Cluster topology
+      description: Number/type of nodes and relevant network arrangement.
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+      description: Include exact commands and the smallest repeatable sequence.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized logs / diagnostics
+      render: shell
