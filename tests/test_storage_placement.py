@@ -100,16 +100,15 @@ def test_unhealthy_or_ineligible_writers_do_not_rank() -> None:
 
 
 def test_weight_bias_is_stable_and_integer_based() -> None:
-    def deterministic_digest(data: bytes) -> bytes:
-        # Return a stable nonzero pseudo-score based on the canonical bytes.
-        return bytes([sum(data) % 251 + 1])
+    def tied_digest(_: bytes) -> bytes:
+        return b"\x01"
 
     normal = StorageCandidate("pi-a", weight=1000)
     preferred = StorageCandidate("pi-b", weight=4000)
-    ranked = rank_storage_candidates("artifact", [normal, preferred], digest_fn=deterministic_digest)
+    ranked = rank_storage_candidates("artifact", [normal, preferred], digest_fn=tied_digest)
 
-    # Weight is part of deterministic ranking; there is no live floating-point load input.
-    assert {item.candidate.node_id for item in ranked} == {"pi-a", "pi-b"}
+    assert ranked[0].candidate == preferred
+    assert ranked[0].score == ranked[1].score * 4
     assert all(isinstance(item.score, int) for item in ranked)
 
 
