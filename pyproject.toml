@@ -8,8 +8,21 @@ version = "0.1.0"
 description = "Self-organizing distributed compute fabric for Raspberry Pi clusters"
 readme = "README.md"
 requires-python = ">=3.11"
-license = {text = "MIT"}
+license = "Apache-2.0"
 authors = [{name = "Kelly Eldritch"}]
+keywords = ["raspberry-pi", "distributed-computing", "cluster", "asyncio", "pi", "chudnovsky"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Education",
+  "License :: OSI Approved :: Apache Software License",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: System :: Distributed Computing",
+]
 dependencies = [
   "cryptography>=43",
   "platformdirs>=4.3",
@@ -21,7 +34,18 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.3", "pytest-asyncio>=0.24"]
+dev = [
+  "build>=1.2",
+  "pytest>=8.3",
+  "pytest-asyncio>=0.24",
+  "ruff>=0.8",
+]
+
+[project.urls]
+Homepage = "https://github.com/kellyjanderson/pipy"
+Repository = "https://github.com/kellyjanderson/pipy"
+Issues = "https://github.com/kellyjanderson/pipy/issues"
+Documentation = "https://github.com/kellyjanderson/pipy/blob/main/ARCHITECTURE.md"
 
 [project.scripts]
 pipy = "pipy.cli:app"
@@ -32,3 +56,10 @@ packages = ["src/pipy"]
 [tool.pytest.ini_options]
 addopts = "-q"
 asyncio_mode = "auto"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC"]
